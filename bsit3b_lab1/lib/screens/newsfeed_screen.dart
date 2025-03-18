@@ -6,7 +6,7 @@ class NewsfeedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
+    // TODO: implement builds
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
