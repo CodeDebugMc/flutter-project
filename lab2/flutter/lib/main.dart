@@ -7,6 +7,8 @@ void main() {
 }
 
 class UserScreen extends StatefulWidget {
+  const UserScreen({super.key});
+
   @override
   _UserScreenState createState() => _UserScreenState();
 }
@@ -32,6 +34,30 @@ class _UserScreenState extends State<UserScreen> {
   void handleSave() async {
     String name = nameController.text;
     String email = emailController.text;
+
+    if (editingId == null) {
+      await ApiService.addUser(name, email);
+    } else {
+      await ApiService.updateUser(editingId!, name, email);
+    }
+
+    nameController.clear();
+    emailController.clear();
+    editingId = null;
+    refreshUsers();
+  }
+
+  void handleEdit(User user) {
+    setState(() {
+      nameController.text = user.name;
+      emailController.text = user.email;
+      editingId = user.id;
+    });
+  }
+
+  void handleDelete(int id) async {
+    await ApiService.deleteUser(id);
+    refreshUsers();
   }
 
   @override
@@ -64,14 +90,32 @@ class _UserScreenState extends State<UserScreen> {
             child: FutureBuilder<List<User>>(
               future: futureUsers,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+                if (snapshot.connectionState == ConnectionState.waiting)
                   return Center(child: CircularProgressIndicator());
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) 
-                  return Center(
-                    child: Text('No Users Found'),
-                  )
-
-                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty)
+                  return Center(child: Text('No Users Found'));
+                return ListView(
+                  children:
+                      snapshot.data!.map((user) {
+                        return ListTile(
+                          title: Text(user.name),
+                          subtitle: Text(user.email),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                onPressed: () => handleEdit(user),
+                                icon: Icon(Icons.edit),
+                              ),
+                              IconButton(
+                                onPressed: () => handleDelete(user.id),
+                                icon: Icon(Icons.delete),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                );
               },
             ),
           ),
